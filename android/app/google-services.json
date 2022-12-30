@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "139971215482",
+    "project_id": "kayros-a1be1",
+    "storage_bucket": "kayros-a1be1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:139971215482:android:c462760a97bf020046bbc3",
+        "android_client_info": {
+          "package_name": "com.kayros.kayros"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "139971215482-epj6mkrk0i1prsvdc98s2r7cioh7c51i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBsf7c7SyOv_RdXDhOMSV6T06IGrLQPKEU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "139971215482-epj6mkrk0i1prsvdc98s2r7cioh7c51i.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
