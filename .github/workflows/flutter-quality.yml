@@ -1,4 +1,4 @@
-name: Flutter quality checks
+name: Calidad y pruebas de Kayros
 
 on:
   push:
@@ -12,33 +12,91 @@ on:
 permissions:
   contents: read
 
+# Cancelar ejecuciones anteriores cuando llega otro commit a la misma rama.
 concurrency:
   group: flutter-qa-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  analyze-and-test:
+  analizar-y-probar:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Checkout
+      - name: Obtener código
         uses: actions/checkout@v4
 
-      - name: Set up Flutter
+      - name: Configurar Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           flutter-version: '3.41.9'
           cache: true
 
-      - name: Download dependencies
+      - name: Instalar dependencias
         run: flutter pub get
 
-      - name: Check formatting
-        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Verificar formato Dart
+        run: dart format --output=none --set-exit-if-changed lib test integration_test
 
-      - name: Analyze source
+      - name: Analizar código Flutter
         run: flutter analyze
 
-      - name: Run automated tests
+      - name: Ejecutar pruebas unitarias y de widgets
         run: flutter test
+
+  integracion-android:
+    name: Firebase local - ${{ matrix.recorrido }}
+    runs-on: ubuntu-latest
+    needs: analizar-y-probar
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        recorrido:
+          - auth_e2e_test.dart
+          - paquetes_e2e_test.dart
+    steps:
+      - name: Obtener código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 21 para Firestore y Android
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Configurar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          channel: stable
+          cache: true
+
+      - name: Instalar dependencias y Firebase CLI
+        run: |
+          flutter pub get
+          npm install --global firebase-tools@15.34.1
+
+      - name: Habilitar aceleración del emulador Android
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Ejecutar el recorrido con Android y Firebase local
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          emulator-boot-timeout: 900
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: |
+            firebase emulators:exec --project demo-kayros-e2e --config firebase.e2e.json --only auth,firestore "bash tool/ejecutar_e2e.sh ${{ matrix.recorrido }}"
