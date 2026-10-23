@@ -93,3 +93,9 @@ git show <hash-del-commit>
 - Configurar y revisar las reglas de Firebase antes de distribuir.
 - La recuperación de contraseña depende de que Firebase Authentication y su plantilla de correo estén disponibles.
 - La confirmación de guardado o eliminación se muestra solo después de que Firestore responde correctamente.
+
+## QA y GitHub Actions
+
+La guía [Pruebas reales con Firebase](docs/QA_FIREBASE.md) explica cómo crear una cuenta exclusiva de pruebas y validar paquetes sin utilizar datos personales. No se deben guardar contraseñas en el repositorio.
+
+El workflow `Flutter quality checks` se ejecuta en cada push y pull request dirigido a `main`, validando formato, análisis Dart/Flutter y las pruebas automatizadas.

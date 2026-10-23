@@ -41,3 +41,8 @@ app.*.map.json
 
 # Flutter-generated iOS files
 ios/Flutter/ephemeral/
+
+# Local QA secrets (never commit test account credentials)
+qa-credentials*.txt
+kayros-qa-account.txt
+/qa-secrets/
