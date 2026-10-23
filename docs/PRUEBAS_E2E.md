@@ -35,6 +35,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File tool\ejecutar_e2e.ps1 -R
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File tool\ejecutar_e2e.ps1 -Recorrido Paquetes
 ```
 
+El script de Windows impide que dos ejecuciones intenten usar el mismo emulador Android al mismo tiempo. Si ya hay una prueba activa, deténla o deja que termine antes de iniciar otra.
+
 También se pueden ejecutar las pruebas por separado:
 
 ```powershell
