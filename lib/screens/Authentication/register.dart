@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kayros/screens/services/authentication_services/auth_services.dart';
+import 'package:kayros/theme/app_theme.dart';
+import 'package:kayros/utils/form_validators.dart';
 import 'package:provider/provider.dart';
 
 class Register extends StatefulWidget {
@@ -13,15 +15,17 @@ class Register extends StatefulWidget {
 class _RegisterState extends State<Register> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _repeatPasswordController = TextEditingController();
   final _nameController = TextEditingController();
   final _surnameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  bool obscurePassword = true;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _repeatPasswordController.dispose();
     _nameController.dispose();
     _surnameController.dispose();
     super.dispose();
@@ -41,118 +45,156 @@ class _RegisterState extends State<Register> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthServices>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Crear cuenta')),
+      appBar: AppBar(
+        leading: IconButton(
+          tooltip: 'Volver al inicio de sesión',
+          onPressed: auth.isloading ? null : widget.toggleScreen,
+          icon: const Icon(Icons.arrow_back),
+        ),
+        title: const Text('Crear cuenta'),
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 490),
+            constraints: const BoxConstraints(maxWidth: 510),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(22),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Bienvenido a Kayros Express',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    const Text('Crea tu cuenta para solicitar envíos.'),
-                    const SizedBox(height: 22),
-                    TextFormField(
-                      controller: _nameController,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        labelText: 'Nombre',
-                        prefixIcon: Icon(Icons.person_outline),
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) => (value?.trim().isEmpty ?? true)
-                          ? 'Ingresa tu nombre.' : null,
-                    ),
-                    const SizedBox(height: 17),
-                    TextFormField(
-                      controller: _surnameController,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        labelText: 'Apellidos',
-                        prefixIcon: Icon(Icons.person_outline),
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) => (value?.trim().isEmpty ?? true)
-                          ? 'Ingresa tus apellidos.' : null,
-                    ),
-                    const SizedBox(height: 17),
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Correo',
-                        prefixIcon: Icon(Icons.email_outlined),
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        final email = value?.trim() ?? '';
-                        if (email.isEmpty || !email.contains('@')) {
-                          return 'Ingresa un correo electrónico válido.';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 17),
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: obscurePassword,
-                      decoration: InputDecoration(
-                        labelText: 'Contraseña',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          tooltip: obscurePassword ? 'Mostrar contraseña' : 'Ocultar contraseña',
-                          icon: Icon(obscurePassword
-                              ? Icons.visibility_outlined : Icons.visibility_off_outlined),
-                          onPressed: () => setState(() => obscurePassword = !obscurePassword),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              child: AutofillGroup(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.person_add_alt_1_outlined,
+                          size: 47, color: AppPalette.primary),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Únete a Kayros Express',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: AppPalette.ink,
                         ),
                       ),
-                      validator: (value) => (value?.length ?? 0) < 6
-                          ? 'La contraseña debe tener al menos 6 caracteres.' : null,
-                    ),
-                    if (auth.errorMessage != null) ...[
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Registra tus datos para solicitar envíos.',
+                        style: TextStyle(color: AppPalette.muted),
+                      ),
+                      const SizedBox(height: 22),
+                      TextFormField(
+                        controller: _nameController,
+                        textCapitalization: TextCapitalization.words,
+                        autofillHints: const [AutofillHints.givenName],
+                        validator: (value) =>
+                            FormValidators.required(value, 'tu nombre'),
+                        decoration: const InputDecoration(
+                          labelText: 'Nombre',
+                          prefixIcon: Icon(Icons.person_outline),
+                        ),
+                      ),
                       const SizedBox(height: 16),
-                      Card(
-                        color: Colors.orange.shade50,
-                        child: ListTile(
-                          leading: const Icon(Icons.error_outline, color: Colors.red),
-                          title: Text(auth.errorMessage!),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () => auth.setMessage(null),
+                      TextFormField(
+                        controller: _surnameController,
+                        textCapitalization: TextCapitalization.words,
+                        autofillHints: const [AutofillHints.familyName],
+                        validator: (value) =>
+                            FormValidators.required(value, 'tus apellidos'),
+                        decoration: const InputDecoration(
+                          labelText: 'Apellidos',
+                          prefixIcon: Icon(Icons.person_outline),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        autofillHints: const [AutofillHints.email],
+                        validator: FormValidators.email,
+                        decoration: const InputDecoration(
+                          labelText: 'Correo electrónico',
+                          prefixIcon: Icon(Icons.email_outlined),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        autofillHints: const [AutofillHints.newPassword],
+                        validator: FormValidators.newPassword,
+                        decoration: InputDecoration(
+                          labelText: 'Contraseña',
+                          helperText: 'Mínimo 8 caracteres.',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            tooltip: _obscurePassword
+                                ? 'Mostrar contraseñas'
+                                : 'Ocultar contraseñas',
+                            icon: Icon(_obscurePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined),
+                            onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword),
                           ),
                         ),
                       ),
-                    ],
-                    const SizedBox(height: 22),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: FilledButton(
-                        onPressed: auth.isloading ? null : _submit,
-                        child: auth.isloading
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text('Registrar', style: TextStyle(fontSize: 18)),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _repeatPasswordController,
+                        obscureText: _obscurePassword,
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) => _submit(),
+                        validator: (value) => FormValidators.confirmPassword(
+                            value, _passwordController.text),
+                        decoration: const InputDecoration(
+                          labelText: 'Confirmar contraseña',
+                          prefixIcon: Icon(Icons.lock_reset_outlined),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Flexible(child: Text('¿Ya tienes una cuenta?')),
-                        TextButton(
-                          onPressed: auth.isloading ? null : widget.toggleScreen,
-                          child: const Text('Iniciar sesión'),
+                      if (auth.errorMessage != null) ...[
+                        const SizedBox(height: 16),
+                        Card(
+                          color: const Color(0xFFFFEFEF),
+                          child: ListTile(
+                            leading: const Icon(Icons.error_outline,
+                                color: AppPalette.primary),
+                            title: Text(auth.errorMessage!),
+                            trailing: IconButton(
+                              tooltip: 'Cerrar aviso',
+                              onPressed: () => auth.setMessage(null),
+                              icon: const Icon(Icons.close),
+                            ),
+                          ),
                         ),
                       ],
-                    ),
-                  ],
+                      const SizedBox(height: 22),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: auth.isloading ? null : _submit,
+                          child: auth.isloading
+                              ? const SizedBox(
+                                  height: 22,
+                                  width: 22,
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2))
+                              : const Text('Crear cuenta'),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Flexible(child: Text('¿Ya tienes una cuenta?')),
+                          TextButton(
+                            onPressed:
+                                auth.isloading ? null : widget.toggleScreen,
+                            child: const Text('Iniciar sesión'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

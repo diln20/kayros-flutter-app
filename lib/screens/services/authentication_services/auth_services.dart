@@ -3,10 +3,15 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:kayros/utils/auth_error_messages.dart';
 
 class AuthServices extends ChangeNotifier {
-  final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
-  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  AuthServices({FirebaseAuth? auth, FirebaseFirestore? database})
+      : firebaseAuth = auth ?? FirebaseAuth.instance,
+        firestore = database ?? FirebaseFirestore.instance;
+
+  final FirebaseAuth firebaseAuth;
+  final FirebaseFirestore firestore;
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -25,29 +30,6 @@ class AuthServices extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _messageFor(FirebaseAuthException error) {
-    switch (error.code) {
-      case 'email-already-in-use':
-        return 'Este correo ya está registrado.';
-      case 'invalid-email':
-        return 'El correo electrónico no es válido.';
-      case 'weak-password':
-        return 'La contraseña es demasiado débil.';
-      case 'user-not-found':
-      case 'wrong-password':
-      case 'invalid-credential':
-        return 'Correo o contraseña incorrectos.';
-      case 'network-request-failed':
-        return 'Comprueba tu conexión a Internet.';
-      case 'too-many-requests':
-        return 'Demasiados intentos. Prueba nuevamente más tarde.';
-      case 'operation-not-allowed':
-        return 'La autenticación por correo no está habilitada en Firebase.';
-      default:
-        return error.message ?? 'No fue posible completar la autenticación.';
-    }
-  }
-
   Future<User?> register(
     String email,
     String password,
@@ -58,28 +40,33 @@ class AuthServices extends ChangeNotifier {
     setLoading(true);
     try {
       final credentials = await firebaseAuth.createUserWithEmailAndPassword(
-        email: email,
+        email: email.trim(),
         password: password,
       );
       final user = credentials.user;
       if (user == null) {
         throw StateError('Firebase no devolvió un usuario.');
       }
+
+      // Mantiene la estructura original sin exponer la contraseña.
       await firestore.collection('users').doc(user.uid).set({
-        'email': email,
+        'email': email.trim(),
         'uid': user.uid,
         'nombre': firstName.trim(),
         'apellidos': lastName.trim(),
       }, SetOptions(merge: true));
       return user;
-    } on FirebaseAuthException catch (e) {
-      setMessage(_messageFor(e));
-    } on FirebaseException catch (e) {
-      setMessage(e.message ?? 'No se pudo guardar el perfil.');
+    } on FirebaseAuthException catch (error) {
+      setMessage(AuthErrorMessages.forCode(
+        error.code,
+        fallback: error.message,
+      ));
+    } on FirebaseException catch (error) {
+      setMessage(error.message ?? 'No se pudo guardar el perfil.');
     } on SocketException {
       setMessage('Sin conexión a Internet.');
-    } catch (e) {
-      setMessage('Error al crear la cuenta: $e');
+    } catch (error) {
+      setMessage('No fue posible crear la cuenta: $error');
     } finally {
       setLoading(false);
     }
@@ -90,29 +77,58 @@ class AuthServices extends ChangeNotifier {
     setMessage(null);
     setLoading(true);
     try {
-      final result = await firebaseAuth.signInWithEmailAndPassword(
-        email: email,
+      final credentials = await firebaseAuth.signInWithEmailAndPassword(
+        email: email.trim(),
         password: password,
       );
-      return result.user;
-    } on FirebaseAuthException catch (e) {
-      setMessage(_messageFor(e));
+      return credentials.user;
+    } on FirebaseAuthException catch (error) {
+      setMessage(AuthErrorMessages.forCode(
+        error.code,
+        fallback: error.message,
+      ));
     } on SocketException {
       setMessage('Sin conexión a Internet.');
-    } catch (e) {
-      setMessage('Error al iniciar sesión: $e');
+    } catch (error) {
+      setMessage('No se pudo iniciar sesión: $error');
     } finally {
       setLoading(false);
     }
     return null;
   }
 
+  Future<bool> requestPasswordReset(String email) async {
+    setMessage(null);
+    setLoading(true);
+    try {
+      await firebaseAuth.sendPasswordResetEmail(email: email.trim());
+      return true;
+    } on FirebaseAuthException catch (error) {
+      setMessage(AuthErrorMessages.forCode(
+        error.code,
+        fallback: error.message,
+      ));
+    } on SocketException {
+      setMessage('Sin conexión a Internet.');
+    } catch (_) {
+      setMessage('No fue posible enviar el correo de recuperación.');
+    } finally {
+      setLoading(false);
+    }
+    return false;
+  }
+
   Future<void> logout() async {
     try {
       await firebaseAuth.signOut();
       setMessage(null);
-    } catch (e) {
-      setMessage('No fue posible cerrar sesión: $e');
+    } on FirebaseAuthException catch (error) {
+      setMessage(AuthErrorMessages.forCode(
+        error.code,
+        fallback: error.message,
+      ));
+    } catch (_) {
+      setMessage('No fue posible cerrar sesión.');
     }
   }
 }

@@ -30,4 +30,21 @@ abstract final class FormValidators {
     }
     return null;
   }
+
+  static String? newPassword(String? value) {
+    if (value == null || value.length < 8) {
+      return 'Usa una contraseña de al menos 8 caracteres.';
+    }
+    return null;
+  }
+
+  static String? confirmPassword(String? value, String original) {
+    if (value == null || value.isEmpty) {
+      return 'Confirma tu contraseña.';
+    }
+    if (value != original) {
+      return 'Las contraseñas no coinciden.';
+    }
+    return null;
+  }
 }
