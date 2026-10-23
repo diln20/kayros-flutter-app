@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:kayros/screens/services/authentication_services/auth_services.dart';
 import 'package:kayros/screens/wrapper.dart';
+import 'package:kayros/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -17,14 +18,7 @@ class KayrosApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Kayros Express',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.red,
-          foregroundColor: Colors.white,
-        ),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light(),
       debugShowCheckedModeBanner: false,
       home: const FirebaseBootstrap(),
     );
@@ -65,7 +59,8 @@ class _FirebaseBootstrapState extends State<FirebaseBootstrap> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.cloud_off, size: 56, color: Colors.red),
+                    const Icon(Icons.cloud_off,
+                        size: 56, color: AppPalette.primary),
                     const SizedBox(height: 16),
                     const Text('No se pudo conectar con Firebase.',
                         textAlign: TextAlign.center),
@@ -92,7 +87,6 @@ class _FirebaseBootstrapState extends State<FirebaseBootstrap> {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-
         return MultiProvider(
           providers: [
             ChangeNotifierProvider<AuthServices>(
@@ -110,4 +104,3 @@ class _FirebaseBootstrapState extends State<FirebaseBootstrap> {
     );
   }
 }
-
