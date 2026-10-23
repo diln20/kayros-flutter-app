@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:kayros/config/firebase_runtime.dart';
 import 'package:flutter/material.dart';
 import 'package:kayros/models/paquete_data.dart';
 import 'package:kayros/theme/app_theme.dart';
@@ -74,7 +74,7 @@ class _PacketState extends State<Packet> {
   Future<void> _save() async {
     if (_saving || !(_formKey.currentState?.validate() ?? false)) return;
 
-    final user = FirebaseAuth.instance.currentUser;
+    final user = FirebaseRuntime.auth.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Inicia sesión para guardar un paquete.')),
@@ -98,7 +98,7 @@ class _PacketState extends State<Packet> {
         await widget.reference!.update(fields);
       } else {
         final now = DateTime.now();
-        await FirebaseFirestore.instance
+        await FirebaseRuntime.firestore
             .collection('paquetes')
             .doc(user.uid)
             .collection('mispaquetes')

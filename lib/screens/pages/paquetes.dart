@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:kayros/config/firebase_runtime.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:kayros/models/paquete_data.dart';
@@ -23,9 +23,9 @@ class _PaquetesState extends State<Paquetes> {
   @override
   void initState() {
     super.initState();
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = FirebaseRuntime.auth.currentUser?.uid;
     if (uid != null) {
-      _packages = FirebaseFirestore.instance
+      _packages = FirebaseRuntime.firestore
           .collection('paquetes')
           .doc(uid)
           .collection('mispaquetes')

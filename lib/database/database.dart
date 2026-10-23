@@ -1,12 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:kayros/config/firebase_runtime.dart';
 
 class Database {
   static String? userUid;
   static String? userUids;
 
   static String get _uid {
-    final uid = userUid ?? FirebaseAuth.instance.currentUser?.uid;
+    final uid = userUid ?? FirebaseRuntime.auth.currentUser?.uid;
     if (uid == null) {
       throw StateError('Debe haber un usuario autenticado.');
     }
@@ -14,7 +14,7 @@ class Database {
   }
 
   static CollectionReference<Map<String, dynamic>> get _items =>
-      FirebaseFirestore.instance
+      FirebaseRuntime.firestore
           .collection('notes')
           .doc(_uid)
           .collection('items');

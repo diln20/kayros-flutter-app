@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:kayros/config/firebase_runtime.dart';
 import 'package:kayros/screens/services/authentication_services/auth_services.dart';
 import 'package:kayros/screens/wrapper.dart';
 import 'package:kayros/theme/app_theme.dart';
@@ -38,7 +39,7 @@ class _FirebaseBootstrapState extends State<FirebaseBootstrap> {
   @override
   void initState() {
     super.initState();
-    initialization = Firebase.initializeApp();
+    initialization = FirebaseRuntime.initialize();
   }
 
   void retry() {
@@ -93,7 +94,7 @@ class _FirebaseBootstrapState extends State<FirebaseBootstrap> {
               create: (_) => AuthServices(),
             ),
             StreamProvider<User?>(
-              create: (_) => FirebaseAuth.instance.authStateChanges(),
+              create: (_) => FirebaseRuntime.auth.authStateChanges(),
               initialData: null,
               catchError: (context, error) => null,
             ),

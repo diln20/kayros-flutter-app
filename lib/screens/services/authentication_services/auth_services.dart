@@ -2,13 +2,14 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:kayros/config/firebase_runtime.dart';
 import 'package:flutter/foundation.dart';
 import 'package:kayros/utils/auth_error_messages.dart';
 
 class AuthServices extends ChangeNotifier {
   AuthServices({FirebaseAuth? auth, FirebaseFirestore? database})
-      : firebaseAuth = auth ?? FirebaseAuth.instance,
-        firestore = database ?? FirebaseFirestore.instance;
+      : firebaseAuth = auth ?? FirebaseRuntime.auth,
+        firestore = database ?? FirebaseRuntime.firestore;
 
   final FirebaseAuth firebaseAuth;
   final FirebaseFirestore firestore;
