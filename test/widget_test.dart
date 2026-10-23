@@ -36,8 +36,9 @@ void main() {
     expect(find.text('Apellidos'), findsOneWidget);
   });
 
-  testWidgets('Pantalla de información muestra estado original', (tester) async {
+  testWidgets('Pantalla de información muestra estado original',
+      (tester) async {
     await tester.pumpWidget(const MaterialApp(home: Scaffold(body: Drivers())));
-    expect(find.text('En construcción'), findsOneWidget);
+    expect(find.text('¿Cómo funciona Kayros?'), findsOneWidget);
   });
 }

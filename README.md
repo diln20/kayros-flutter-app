@@ -1,79 +1,95 @@
 # Kayros Express
 
-Aplicacion Flutter de gestion de solicitudes de paquetes, migrada desde la version original del repositorio a **Flutter 3.41 / Dart 3.11**.
+Aplicación Flutter para gestionar solicitudes de envío. Proyecto original migrado a **Flutter 3 / Dart 3**, conservando Firebase Authentication y Cloud Firestore y modernizando su interfaz.
 
-## Funcionalidades recuperadas
+## Funcionalidades
 
-- Registro de usuarios y acceso con correo y contrasena mediante Firebase Authentication.
-- Inicio, cierre de sesion y cambio automatico de pantallas segun el estado de autenticacion.
-- Datos basicos de usuario almacenados en Cloud Firestore, coleccion `users`.
-- Registro, lista, detalle y eliminacion de paquetes por usuario.
-- Carrusel de imagenes, menu de inicio y navegacion inferior.
-- Formulario de ocho campos con validacion y mensajes de error.
-- Pantalla "En construccion" para la seccion originalmente incompleta.
+- **Cuenta y acceso:** registro con confirmación de contraseña, inicio y cierre de sesión, mensajes claros y recuperación por correo.
+- **Inicio:** panel adaptable a móvil y escritorio, carrusel informativo local y accesos rápidos.
+- **Paquetes:** registrar, consultar, buscar, ordenar por fecha, abrir detalles, editar y eliminar con confirmación.
+- **Información:** instrucciones integradas y preguntas frecuentes.
+- **Errores:** muestra problemas de conexión y de Firestore sin simular guardados exitosos.
 
-## Compatibilidad de datos
+## Requisitos
 
-Se mantuvo el esquema original:
-- `users/{uid}`: `uid`, `email`, `nombre`, `apellidos`.
-- `paquetes/{uid}/mispaquetes/{documentId}`: `title`, `description`, `time`, `timestamp`, `cedula`, `producto`, `tipo`, `email`, `dirrecion`, `valor`.
-- `notes/{uid}/items/{documentId}`: utilidades de base de datos heredadas.
+- Flutter SDK compatible con Dart 3 (validado con Flutter 3.41.9 / Dart 3.11.5).
+- Android SDK y JDK compatibles para ejecutar en Android.
+- Proyecto Firebase activo, con **Email/Password** habilitado en Authentication y reglas de Firestore que permitan acceso a los datos del usuario autenticado.
+- `android/app/google-services.json` correspondiente a la aplicación Android `com.kayros.kayros`.
 
-Los documentos nuevos de paquetes usan identificadores automaticos de Firestore. Se siguen mostrando y eliminando documentos creados por la version anterior utilizando su identificador real, no el campo `time`.
+## Ejecutar localmente
 
-## Ejecutar en Android
-
-Prerequisitos: Flutter 3.27 o superior, Android SDK y JDK compatibles.
+Desde la carpeta del proyecto:
 
 ```powershell
-cd C:\Users\user\Documents\kayros-flutter-app
-C:\dev\flutter\bin\flutter.bat pub get
-C:\dev\flutter\bin\flutter.bat analyze
-C:\dev\flutter\bin\flutter.bat test
-C:\dev\flutter\bin\flutter.bat devices
-C:\dev\flutter\bin\flutter.bat run -d emulator-5554
+flutter pub get
+flutter analyze
+flutter test
+flutter devices
+flutter run -d emulator-5554
 ```
 
-Generar APK de depuracion:
+Crear APK Android de depuración:
 
 ```powershell
-C:\dev\flutter\bin\flutter.bat build apk --debug
+flutter build apk --debug
 ```
 
-Resultado: `build/app/outputs/flutter-apk/app-debug.apk`.
+Archivo resultante: `build/app/outputs/flutter-apk/app-debug.apk`.
 
-## Firebase
+Para generar una versión publicable se necesita la firma release correspondiente; el APK debug no es una versión de producción.
 
-Android conserva el `google-services.json` original con el identificador de paquete `com.kayros.kayros`. Se utiliza Firebase Core, Authentication y Cloud Firestore modernos. Es necesario que el proyecto Firebase original siga activo y que sus reglas de seguridad autoricen el acceso autenticado.
+## Compatibilidad con Firestore
 
-**No se incluyen credenciales de prueba ni se escriben datos reales durante las pruebas automatizadas.** Para una validacion integral de registro y CRUD hay que probar con una cuenta autorizada y reglas de Firestore adecuadas.
+Los registros antiguos **no necesitan migración de documentos**. Se preservan las rutas y nombres de los campos, incluso `dirrecion` (ortografía heredada):
 
-### Flutter Web
+| Ruta | Uso |
+| --- | --- |
+| `users/{uid}` | Perfil del usuario: `uid`, `email`, `nombre`, `apellidos` |
+| `paquetes/{uid}/mispaquetes/{id}` | Solicitudes de paquetes de cada usuario |
+| `notes/{uid}/items/{id}` | Colección auxiliar heredada |
 
-La aplicacion original no incluia una configuracion de Firebase para Web. La compilacion web puede completarse, pero para iniciar sesion y acceder a Firestore en Web debe registrarse una aplicacion web en el mismo proyecto Firebase y proporcionar las opciones de FlutterFire mediante `flutterfire configure`. No reutilizar a ciegas el identificador de aplicacion Android como identificador web.
+Cada paquete mantiene los campos:
+`title`, `description`, `cedula`, `producto`, `tipo`, `email`, `dirrecion`, `valor`, `timestamp` y `time`.
 
-### iOS
+La aplicación:
+- Consulta documentos de Firestore usando su identificador real, incluso los creados en versiones antiguas.
+- Al crear, usa un identificador automático y guarda ambas fechas (`timestamp` y `time`).
+- Al editar, actualiza los datos del paquete **sin sobrescribir la fecha de creación**.
+- Permite buscar ignorando mayúsculas y tildes comunes; ordena los registros fechados y coloca los que no tienen fecha al final.
 
-La carpeta iOS original se conserva, pero requiere macOS/Xcode y la configuracion de Firebase iOS para compilar y probar.
+## Validación
 
-## Migracion tecnica
+```powershell
+flutter analyze
+flutter test
+flutter build apk --debug
+```
 
-- Eliminado el antiguo limite de Dart 2 (`<3.0.0`) y migradas las clases a null safety.
-- Sustituidos los accesos antiguos a snapshots (`documents`) por `docs` y `data()`.
-- Actualizado el Android embedding y Gradle a configuracion Kotlin DSL moderna.
-- Reemplazado el carrusel de `getwidget` por `PageView` nativo.
-- Retiradas dependencias que no se usaban en el codigo: Firebase Messaging, Firebase Realtime Database, `unicorndial`, etc.
-- El ingreso ya no imprime contrasenas en la consola.
-- La eliminacion de paquetes solicita confirmacion; el formulario espera una escritura exitosa antes de cerrarse.
+Hay pruebas unitarias y de widgets para navegación responsiva, validaciones, documentos antiguos, orden y búsqueda, recuperación de contraseña y ayuda integrada. **Estas pruebas no escriben datos reales en Firebase.**
 
-## Respaldos y Git
+Antes de usar la aplicación en producción, verificar con una cuenta de pruebas autorizada el registro, inicio, recuperación y CRUD de paquetes contra las reglas reales de Firebase.
 
-- Rama local de migracion: `fix/flutter3-compat`.
-- El proyecto original sigue disponible en el historial de `master`.
-- Respaldos externos: `C:\Users\user\Documents\kayros-flutter-backups`.
-- No se ha modificado ni publicado ninguna rama remota.
-- Para desarrollar Windows Desktop deben instalarse Visual Studio C++ y activarse el modo de desarrollador (enlaces simbolicos); esa plataforma esta en respaldo externo.
+## Otras plataformas
 
-## Seguridad
+- **Web:** necesita registrar una aplicación Web en Firebase y generar las opciones de FlutterFire. La configuración Android por sí sola no habilita el acceso desde el navegador.
+- **iOS:** requiere macOS, Xcode y el archivo de configuración Firebase iOS. No se ha verificado una compilación iOS.
+- **Windows:** se conserva un respaldo anterior de la plataforma; no se ha habilitado ni probado como destino de escritorio.
 
-El APK de depuracion esta firmado con llave de debug. Para distribucion real configure firma release, verifique reglas Firebase y habilite App Check donde corresponda.
+## Git y respaldos
+
+La rama `main` contiene la migración y las mejoras en **commits individuales**; `master` conserva el proyecto original. Los respaldos previos de código se encuentran en `C:\Users\user\Documents\kayros-flutter-backups`.
+
+Para consultar qué aporta cada mejora:
+
+```powershell
+git log --oneline
+git show <hash-del-commit>
+```
+
+## Seguridad y límites
+
+- Nunca guardar contraseñas ni credenciales privadas en el repositorio.
+- Configurar y revisar las reglas de Firebase antes de distribuir.
+- La recuperación de contraseña depende de que Firebase Authentication y su plantilla de correo estén disponibles.
+- La confirmación de guardado o eliminación se muestra solo después de que Firestore responde correctamente.
