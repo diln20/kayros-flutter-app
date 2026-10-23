@@ -31,7 +31,9 @@ class Database {
     required String description,
     required String docId,
   }) async {
-    await _items.doc(docId).update({'title': title, 'description': description});
+    await _items
+        .doc(docId)
+        .update({'title': title, 'description': description});
   }
 
   static Stream<QuerySnapshot<Map<String, dynamic>>> readItems() {

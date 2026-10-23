@@ -37,9 +37,8 @@ class CustomFormField extends StatelessWidget {
       focusNode: focusNode,
       keyboardType: keyboardType,
       obscureText: isObscure,
-      textCapitalization: isCapitalized
-          ? TextCapitalization.words
-          : TextCapitalization.none,
+      textCapitalization:
+          isCapitalized ? TextCapitalization.words : TextCapitalization.none,
       textInputAction: inputAction,
       cursorColor: Palette.firebaseYellow,
       validator: validator,
