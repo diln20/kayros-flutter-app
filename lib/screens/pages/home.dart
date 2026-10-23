@@ -68,9 +68,11 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _newPackage() async {
-    await Navigator.of(context).push<bool>(
+    final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute(builder: (_) => const Packet()),
     );
+    if (!mounted) return;
+    if (saved == true) widget.onSelectTab(1);
   }
 
   @override
