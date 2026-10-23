@@ -1,30 +1,43 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility that Flutter provides. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:kayros/main.dart';
+import 'package:kayros/database/db_validator.dart';
+import 'package:kayros/screens/description.dart' as package_details;
+import 'package:kayros/screens/pages/addpacket.dart';
+import 'package:kayros/screens/pages/drivers.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(MyApp());
+  test('Valida campos vacíos correctamente', () {
+    expect(DbValidator.validateField(value: ''), isNotNull);
+    expect(DbValidator.validateField(value: '  '), isNotNull);
+    expect(DbValidator.validateField(value: 'Correcto'), isNull);
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  testWidgets('Detalle muestra datos existentes del paquete', (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: package_details.Description(
+        title: 'Laura',
+        description: 'López',
+        details: {
+          'producto': 'Caja',
+          'cedula': '123456',
+          'dirrecion': 'Calle 1',
+        },
+      ),
+    ));
+    expect(find.text('Laura López'), findsOneWidget);
+    expect(find.text('Caja'), findsOneWidget);
+    expect(find.text('Calle 1'), findsOneWidget);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('Formulario original se abre', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: Packet()));
+    expect(find.text('Agregar paquetes'), findsOneWidget);
+    expect(find.text('Nombre'), findsOneWidget);
+    expect(find.text('Apellidos'), findsOneWidget);
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('Pantalla de información muestra estado original', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: Drivers())));
+    expect(find.text('En construcción'), findsOneWidget);
   });
 }

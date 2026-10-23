@@ -7,95 +7,93 @@ import 'package:kayros/screens/services/authentication_services/auth_services.da
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _paginActual = 0;
-  List<Widget> _paginas = [
-    Home(),
-    Paquetes(),
-    Drivers(),
-  ];
+  int currentPage = 0;
+
+  void changePage(int index) {
+    setState(() => currentPage = index);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final loginProvider = Provider.of<AuthServices>(context);
+    final pages = <Widget>[
+      Home(onSelectTab: changePage),
+      const Paquetes(),
+      const Drivers(),
+    ];
+
     return Scaffold(
       appBar: AppBar(
-        title: Text("Kayro Expres"),
+        title: const Text('Kayros Express'),
         actions: [
           IconButton(
-            icon: Icon(Icons.exit_to_app),
-            onPressed: () async => await loginProvider.logout(),
+            tooltip: 'Cerrar sesión',
+            icon: const Icon(Icons.logout),
+            onPressed: () => context.read<AuthServices>().logout(),
           ),
         ],
       ),
       drawer: Drawer(
-        // Add a ListView to the drawer. This ensures the user can scroll
-        // through the options in the drawer if there isn't enough vertical
-        // space to fit everything.
-        child: ListView(
-          // Important: Remove any padding from the ListView.
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.red,
+        child: SafeArea(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              const DrawerHeader(
+                decoration: BoxDecoration(color: Colors.red),
+                child: Center(
+                  child: Icon(Icons.local_shipping,
+                      size: 78, color: Colors.white),
+                ),
               ),
-              child: Icon(Icons.account_circle),
-            ),
-            ListTile(
-              title: const Text('Item 4'),
-              onTap: () {
-                // Update the state of the app
-                // ...
-                // Then close the drawer
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text('Item 2'),
-              onTap: () {
-                // Update the state of the app
-                // ...
-                // Then close the drawer
-                Navigator.pop(context);
-              },
-            ),
-          ],
+              for (var i = 0; i < pages.length; i++)
+                ListTile(
+                  leading: Icon(
+                    [Icons.home_outlined, Icons.inventory_2_outlined,
+                      Icons.info_outline][i],
+                  ),
+                  title: Text(['Inicio', 'Solicitudes de paquetes',
+                    'Información'][i]),
+                  selected: currentPage == i,
+                  onTap: () {
+                    Navigator.pop(context);
+                    changePage(i);
+                  },
+                ),
+            ],
+          ),
         ),
       ),
-      body: _paginas[_paginActual],
+      body: pages[currentPage],
       bottomNavigationBar: BottomNavigationBar(
-        onTap: (index) {
-          setState(() {
-            _paginActual = index;
-          });
-        },
-        currentIndex: _paginActual,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Inicio"),
+        currentIndex: currentPage,
+        onTap: changePage,
+        selectedItemColor: Colors.red,
+        items: const [
           BottomNavigationBarItem(
-              icon: Icon(Icons.check_box), label: "Solicitud paquetes"),
+            icon: Icon(Icons.home_outlined), label: 'Inicio'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.info_outline), label: "Información")
+            icon: Icon(Icons.inventory_2_outlined), label: 'Paquetes'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.info_outline), label: 'Información'),
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        tooltip: 'Agregar paquete',
         onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => Packet(),
-            ),
+          Navigator.push<bool>(
+            context,
+            MaterialPageRoute(builder: (_) => const Packet()),
           );
         },
         backgroundColor: Colors.red,
-        child: Icon(
-          Icons.add,
-          color: Colors.white,
-          size: 32,
-        ),
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.add),
       ),
     );
   }

@@ -2,27 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:kayros/screens/Authentication/login.dart';
 import 'package:kayros/screens/Authentication/register.dart';
 
-
 class Authenticator extends StatefulWidget {
+  const Authenticator({super.key});
+
   @override
-  _AuthenticatorState createState() => _AuthenticatorState();
+  State<Authenticator> createState() => _AuthenticatorState();
 }
 
-
-
 class _AuthenticatorState extends State<Authenticator> {
-  bool isToggle =false;
-  void toggleScreen(){
-    setState(() {
-      isToggle = !isToggle;
-    });
+  bool showRegister = false;
+
+  void toggleScreen() {
+    setState(() => showRegister = !showRegister);
   }
+
   @override
   Widget build(BuildContext context) {
-   if(isToggle){
-     return Register(toggleScreen:toggleScreen);
-   }else{
-     return Login(toggleScreen:toggleScreen);
-   }
+    return showRegister
+        ? Register(toggleScreen: toggleScreen)
+        : Login(toggleScreen: toggleScreen);
   }
 }

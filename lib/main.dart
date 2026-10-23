@@ -5,68 +5,109 @@ import 'package:kayros/screens/services/authentication_services/auth_services.da
 import 'package:kayros/screens/wrapper.dart';
 import 'package:provider/provider.dart';
 
-void main()=>runApp(MaterialApp(home: MyApp(),));
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const KayrosApp());
+}
 
+class KayrosApp extends StatelessWidget {
+  const KayrosApp({super.key});
 
-
-class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final _init= Firebase.initializeApp();
-    return FutureBuilder(
-      future: _init,
-      builder: (context,snapshoot){
-        if(snapshoot.hasError){
-          return ErrorWidget();
-        }else if (snapshoot.hasData){
-          return MultiProvider(
-              providers: [
-                ChangeNotifierProvider<AuthServices>.value(value:AuthServices()),
-                StreamProvider<User>.value(value: AuthServices().user,
-                initialData:null,)
-              ],
-              child: MaterialApp(
-                theme: ThemeData(
-                  primarySwatch: Colors.red,
+    return MaterialApp(
+      title: 'Kayros Express',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.red,
+          foregroundColor: Colors.white,
+        ),
+        useMaterial3: true,
+      ),
+      debugShowCheckedModeBanner: false,
+      home: const FirebaseBootstrap(),
+    );
+  }
+}
+
+class FirebaseBootstrap extends StatefulWidget {
+  const FirebaseBootstrap({super.key});
+
+  @override
+  State<FirebaseBootstrap> createState() => _FirebaseBootstrapState();
+}
+
+class _FirebaseBootstrapState extends State<FirebaseBootstrap> {
+  late Future<FirebaseApp> initialization;
+
+  @override
+  void initState() {
+    super.initState();
+    initialization = Firebase.initializeApp();
+  }
+
+  void retry() {
+    setState(() => initialization = Firebase.initializeApp());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<FirebaseApp>(
+      future: initialization,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Kayros Express')),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.cloud_off, size: 56, color: Colors.red),
+                    const SizedBox(height: 16),
+                    const Text('No se pudo conectar con Firebase.',
+                        textAlign: TextAlign.center),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${snapshot.error}',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 18),
+                    FilledButton.icon(
+                      onPressed: retry,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Reintentar'),
+                    ),
+                  ],
                 ),
-                debugShowCheckedModeBanner: false,
-                home: Wrapper(),
+              ),
             ),
           );
-          
-        }else{
-          return Loading();
         }
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider<AuthServices>(
+              create: (_) => AuthServices(),
+            ),
+            StreamProvider<User?>(
+              create: (_) => FirebaseAuth.instance.authStateChanges(),
+              initialData: null,
+              catchError: (context, error) => null,
+            ),
+          ],
+          child: const Wrapper(),
+        );
       },
     );
   }
 }
-
-class ErrorWidget extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-    body:Center(
-     child: Column(
-       children: [
-         Icon(Icons.error),
-         Text("Something went wrong !")
-       ]
-     ),
-    ),
-    );
-  }
-}
-
-class Loading extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-      child: CircularProgressIndicator(),
-    ),
-    );
-  }
-}
-
 

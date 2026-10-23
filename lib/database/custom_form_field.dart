@@ -3,89 +3,70 @@ import 'package:kayros/res/custom_colors.dart';
 
 class CustomFormField extends StatelessWidget {
   const CustomFormField({
-    Key key,
-    TextEditingController controller,
-     FocusNode focusNode,
-     TextInputType keyboardType,
-     TextInputAction inputAction,
-     String label,
-     String hint,
-     Function(String value) validator,
+    super.key,
+    this.controller,
+    this.focusNode,
+    this.keyboardType,
+    this.inputAction,
+    this.label,
+    this.hint,
+    this.validator,
     this.isObscure = false,
     this.isCapitalized = false,
     this.maxLines = 1,
     this.isLabelEnabled = true,
-  })  : _emailController = controller,
-        _emailFocusNode = focusNode,
-        _keyboardtype = keyboardType,
-        _inputAction = inputAction,
-        _label = label,
-        _hint = hint,
-        _validator = validator,
-        super(key: key);
+  });
 
-  final TextEditingController _emailController;
-  final FocusNode _emailFocusNode;
-  final TextInputType _keyboardtype;
-  final TextInputAction _inputAction;
-  final String _label;
-  final String _hint;
+  final TextEditingController? controller;
+  final FocusNode? focusNode;
+  final TextInputType? keyboardType;
+  final TextInputAction? inputAction;
+  final String? label;
+  final String? hint;
+  final FormFieldValidator<String>? validator;
   final bool isObscure;
   final bool isCapitalized;
   final int maxLines;
   final bool isLabelEnabled;
-  final Function(String) _validator;
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
       maxLines: maxLines,
-      controller: _emailController,
-      focusNode: _emailFocusNode,
-      keyboardType: _keyboardtype,
+      controller: controller,
+      focusNode: focusNode,
+      keyboardType: keyboardType,
       obscureText: isObscure,
-      textCapitalization:
-          isCapitalized ? TextCapitalization.words : TextCapitalization.none,
-      textInputAction: _inputAction,
+      textCapitalization: isCapitalized
+          ? TextCapitalization.words
+          : TextCapitalization.none,
+      textInputAction: inputAction,
       cursorColor: Palette.firebaseYellow,
-      validator: (value) => _validator(value),
+      validator: validator,
       decoration: InputDecoration(
-        labelText: isLabelEnabled ? _label : null,
-        labelStyle: TextStyle(color: Palette.firebaseYellow),
-        hintText: _hint,
+        labelText: isLabelEnabled ? label : null,
+        labelStyle: const TextStyle(color: Palette.firebaseYellow),
+        hintText: hint,
         hintStyle: TextStyle(
-          color: Palette.firebaseGrey.withOpacity(0.5),
+          color: Palette.firebaseGrey.withValues(alpha: 0.5),
         ),
-        errorStyle: TextStyle(
+        errorStyle: const TextStyle(
           color: Colors.redAccent,
           fontWeight: FontWeight.bold,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.0),
-          borderSide: BorderSide(
-            color: Palette.firebaseAmber,
-            width: 2,
-          ),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Palette.firebaseAmber, width: 2),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.0),
+          borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(
-            color: Palette.firebaseGrey.withOpacity(0.5),
+            color: Palette.firebaseGrey.withValues(alpha: 0.5),
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.0),
-          borderSide: BorderSide(
-            color: Colors.redAccent,
-            width: 2,
-          ),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.0),
-          borderSide: BorderSide(
-            color: Colors.redAccent,
-            width: 2,
-          ),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 2),
         ),
       ),
     );

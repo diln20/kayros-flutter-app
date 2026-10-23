@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 
-class Drivers extends StatefulWidget {
-  @override
-  _DriversState createState() => _DriversState();
-}
-
-class _DriversState extends State<Drivers> {
-  int driver;
+class Drivers extends StatelessWidget {
+  const Drivers({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        "En Construcción 3",
-        style: TextStyle(fontSize: 30),
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.engineering_outlined, color: Colors.red, size: 70),
+            SizedBox(height: 16),
+            Text('En construcción',
+                textAlign: TextAlign.center, style: TextStyle(fontSize: 24)),
+          ],
+        ),
       ),
     );
   }

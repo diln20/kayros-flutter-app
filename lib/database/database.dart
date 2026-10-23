@@ -1,64 +1,44 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-final CollectionReference _mainCollection = _firestore.collection('notes');
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Database {
-  static String userUid;
-  static String userUids;
+  static String? userUid;
+  static String? userUids;
+
+  static String get _uid {
+    final uid = userUid ?? FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      throw StateError('Debe haber un usuario autenticado.');
+    }
+    return uid;
+  }
+
+  static CollectionReference<Map<String, dynamic>> get _items =>
+      FirebaseFirestore.instance
+          .collection('notes')
+          .doc(_uid)
+          .collection('items');
+
   static Future<void> addItem({
-    String title,
-    String description,
+    required String title,
+    required String description,
   }) async {
-    DocumentReference documentReferencer =
-        _mainCollection.doc(userUid).collection('items').doc();
-
-    Map<String, dynamic> data = <String, dynamic>{
-      "title": title,
-      "description": description,
-    };
-
-    await documentReferencer
-        .set(data)
-        .whenComplete(() => print("Note item added to the database"))
-        .catchError((e) => print(e));
+    await _items.add({'title': title, 'description': description});
   }
 
   static Future<void> updateItem({
-    String title,
-    String description,
-    String docId,
+    required String title,
+    required String description,
+    required String docId,
   }) async {
-    DocumentReference documentReferencer =
-        _mainCollection.doc(userUid).collection('items').doc(docId);
-
-    Map<String, dynamic> data = <String, dynamic>{
-      "title": title,
-      "description": description,
-    };
-
-    await documentReferencer
-        .update(data)
-        .whenComplete(() => print("Note item updated in the database"))
-        .catchError((e) => print(e));
+    await _items.doc(docId).update({'title': title, 'description': description});
   }
 
-  static Stream<QuerySnapshot> readItems() {
-    CollectionReference notesItemCollection =
-        _mainCollection.doc(userUid).collection('items');
-
-    return notesItemCollection.snapshots();
+  static Stream<QuerySnapshot<Map<String, dynamic>>> readItems() {
+    return _items.snapshots();
   }
 
-  static Future<void> deleteItem({
-    String docId,
-  }) async {
-    DocumentReference documentReferencer =
-        _mainCollection.doc(userUid).collection('items').doc(docId);
-
-    await documentReferencer
-        .delete()
-        .whenComplete(() => print('Note item deleted from the database'))
-        .catchError((e) => print(e));
+  static Future<void> deleteItem({required String docId}) async {
+    await _items.doc(docId).delete();
   }
 }

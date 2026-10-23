@@ -1,119 +1,128 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:kayros/screens/description.dart';
 import 'package:intl/intl.dart';
-class Paquetes extends StatefulWidget {
-  
+import 'package:kayros/screens/description.dart';
 
-  @override
-  State<Paquetes> createState() => _PaquetesState();
-}
+class Paquetes extends StatelessWidget {
+  const Paquetes({super.key});
 
-class _PaquetesState extends State<Paquetes> {
-   String uid = '';
-  @override
-  void initState() {
-    getuid();
-    super.initState();
+  Future<void> deletePackage(
+      BuildContext context, DocumentReference<Map<String, dynamic>> reference) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Eliminar paquete'),
+        content: const Text('¿Deseas eliminar este paquete definitivamente?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await reference.delete();
+    } on FirebaseException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? 'No fue posible eliminar el paquete.')),
+        );
+      }
+    }
   }
 
-  getuid() async {
-    FirebaseAuth auth = FirebaseAuth.instance;
-    final User user = auth.currentUser;
-    setState(() {
-      uid = user.uid;
-    });
-  }
   @override
   Widget build(BuildContext context) {
-    return   Scaffold(
-      body: Container(
-        padding: EdgeInsets.all(10),
-        height: MediaQuery.of(context).size.height,
-        width: MediaQuery.of(context).size.width,
-        child: StreamBuilder(
-          stream: FirebaseFirestore.instance
-              .collection('paquetes')
-              .doc(uid)
-              .collection('mispaquetes')
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            } else {
-              final docs = snapshot.data.documents;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return const Center(child: Text('Inicia sesión para consultar tus paquetes.'));
+    }
 
-              return ListView.builder(
-                itemCount: docs.length,
-                itemBuilder: (context, index) {
-                  var time = (docs[index]['timestamp'] as Timestamp).toDate();
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('paquetes')
+          .doc(user.uid)
+          .collection('mispaquetes')
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text('No se pudieron cargar los paquetes: ${snapshot.error}',
+                  textAlign: TextAlign.center),
+            ),
+          );
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final docs = snapshot.data!.docs;
+        if (docs.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text('Todavía no tienes paquetes registrados.',
+                  textAlign: TextAlign.center),
+            ),
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: docs.length,
+          itemBuilder: (context, index) {
+            final doc = docs[index];
+            final data = doc.data();
+            final title = (data['title'] ?? 'Sin nombre').toString();
+            final surname = (data['description'] ?? '').toString();
+            final stamp = data['timestamp'];
+            final createdAt = stamp is Timestamp
+                ? stamp.toDate()
+                : DateTime.tryParse((data['time'] ?? '').toString());
+            final dateString = createdAt != null
+                ? DateFormat('dd/MM/yyyy h:mm a').format(createdAt)
+                : 'Sin fecha';
 
-                  return InkWell(
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => Description(
-                                    title: docs[index]['title'],
-                                    description: docs[index]['description'],
-                                  )));
-                    },
-                    child: Container(
-                    //  color: Colors.white,
-                      margin: EdgeInsets.only(bottom: 10),
-                      decoration: BoxDecoration(
-                          color: Color( 0xffff4e4e),
-                          borderRadius: BorderRadius.circular(10)),
-                      height: 90,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                    margin: EdgeInsets.only(left: 20),
-                                    child: Text(docs[index]['title'],
-                                        style:
-                                            GoogleFonts.roboto(fontSize: 20))),
-                                SizedBox(
-                                  height: 5,
-                                ),
-                                Container(
-                                    margin: EdgeInsets.only(left: 20),
-                                    child: Text(
-                                        DateFormat.yMd().add_jm().format(time)))
-                              ]),
-                          Container(
-                              
-                              child: IconButton(
-                                  icon: Icon(
-                                    Icons.delete,
-                                  ),
-                                  onPressed: () async {
-                                    await FirebaseFirestore.instance
-                                        .collection('paquetes')
-                                        .doc(uid)
-                                        .collection('mispaquetes')
-                                        .doc(docs[index]['time'])
-                                        .delete();
-                                  }))
-                        ],
-                      ),
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              clipBehavior: Clip.antiAlias,
+              child: ListTile(
+                contentPadding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+                leading: const Icon(Icons.inventory_2_outlined, color: Colors.red),
+                title: Text('$title $surname',
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                subtitle: Text(
+                  '${data['producto'] ?? 'Paquete'}\n$dateString',
+                  maxLines: 2,
+                ),
+                isThreeLine: true,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => Description(
+                      title: title,
+                      description: surname,
+                      details: data,
                     ),
-                  );
-                },
-              );
-            }
+                  ),
+                ),
+                trailing: IconButton(
+                  tooltip: 'Eliminar paquete',
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  onPressed: () => deletePackage(context, doc.reference),
+                ),
+              ),
+            );
           },
-        ),
-        // color: Colors.red,
-      ),
+        );
+      },
     );
   }
 }
